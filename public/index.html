@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #divLogin {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 320px;
+        }
+
+        #divLogin h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        #inputNombre {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            margin-bottom: 12px;
+            outline: none;
+        }
+
+        #inputNombre:focus {
+            border-color: #4a90e2;
+        }
+
+        #btnLogin {
+            width: 100%;
+            padding: 10px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        #btnLogin:hover {
+            background: #357abd;
+        }
+
+        #divChat {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            width: 480px;
+            max-width: 95vw;
+            overflow: hidden;
+        }
+
+        #numUsuarios {
+            background: #4a90e2;
+            color: white;
+            padding: 12px 16px;
+            font-size: 14px;
+        }
+
+        #messages {
+            list-style: none;
+            padding: 16px;
+            height: 340px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        #messages li {
+            background: #f0f2f5;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            max-width: 80%;
+            align-self: flex-start;
+        }
+
+        #form {
+            display: flex;
+            border-top: 1px solid #eee;
+            padding: 12px;
+            gap: 8px;
+        }
+
+        #input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        #input:focus {
+            border-color: #4a90e2;
+        }
+
+        #form button {
+            padding: 10px 18px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #form button:hover {
+            background: #357abd;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="divLogin">
+        <h2>Introduce tu nombre</h2>
+        <input id="inputNombre" placeholder="Nombre de usuario">
+        <button id="btnLogin">Entrar al chat</button>
+    </div>
+
+    <div id="divChat">
+        <p id="numUsuarios">No estás conectado</p>
+        <form id="form">
+            <input id="input" placeholder="Escribe un mensaje...">
+            <button type="submit">Enviar</button>
+        </form>
+        <h2 style="padding: 12px 16px; color: #333; font-size: 15px;">Mensajes:</h2>
+        <ul id="messages"></ul>
+    </div>
+
+    <script>
+        const socket = io();
+
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
+        const btnLogin = document.getElementById('btnLogin');
+        const divLogin = document.getElementById('divLogin');
+        const divChat = document.getElementById('divChat');
+
+        let miNombre = '';
+
+        btnLogin.addEventListener('click', () => {
+            const nombre = document.getElementById('inputNombre').value.trim();
+            if (!nombre) return;
+
+            miNombre = nombre;
+            socket.emit('nombreUsuario', { nombreUsuario: nombre, estado: '', imagen: '' });
+
+            divLogin.style.display = 'none';
+            divChat.style.display = 'block';
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit('mensaje', { texto: input.value, nombre: miNombre });
+                input.value = '';
+            }
+        });
+
+        socket.on('contador', (numero) => {
+            document.getElementById('numUsuarios').innerHTML = 'Hay ' + numero + ' usuarios conectados';
+        });
+
+        socket.on('nombreUsuario', (nombre) => {
+            console.log(nombre.nombreUsuario + ' ha entrado con estado ' + nombre.estado);
+        });
+
+
+        socket.on('chat mensaje', (msg) => {
+            const item = document.createElement('li');
+            item.textContent = msg;
+            messages.appendChild(item);
+        });
+
+        socket.on('cargar mensajes', (arr) => {
+            arr.forEach(msg => {
+                const item = document.createElement('li');
+                item.textContent = msg;
+                messages.appendChild(item);
+            });
+        });
+    </script>
+</body>
+
+</html>
