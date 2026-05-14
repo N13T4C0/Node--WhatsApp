@@ -1,19 +1,20 @@
 <script setup>
 import { ref } from 'vue'
-import LoginView from './components/LoginView.vue'
-import ChatView from './components/ChatView.vue'
+import VistaLogin from './components/VistaLogin.vue'
+import VistaChat from './components/VistaChat.vue'
 
 const usuario = ref(null)
 
 function onLogin(datos) {
+  // Guardo los datos del usuario
   usuario.value = datos
 }
 </script>
 
 <template>
   <div>
-    <LoginView v-if="!usuario" @login="onLogin" />
-    <ChatView v-else :usuario="usuario" />
+    <VistaLogin v-if="!usuario" @login="onLogin" />
+    <VistaChat v-else :usuario="usuario" />
   </div>
 </template>
 

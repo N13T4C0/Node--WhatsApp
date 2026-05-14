@@ -9,27 +9,22 @@ const avatarSeleccionado = ref(null)
 const error = ref('')
 
 const avatares = [
-  'https://i.pravatar.cc/150?img=1',
-  'https://i.pravatar.cc/150?img=2',
-  'https://i.pravatar.cc/150?img=3',
-  'https://i.pravatar.cc/150?img=4',
-  'https://i.pravatar.cc/150?img=5',
-  'https://i.pravatar.cc/150?img=6',
-  'https://i.pravatar.cc/150?img=7',
-  'https://i.pravatar.cc/150?img=8',
-  'https://i.pravatar.cc/150?img=9',
-  'https://i.pravatar.cc/150?img=10',
-  'https://i.pravatar.cc/150?img=11',
-  'https://i.pravatar.cc/150?img=12',
+  'https://i.pinimg.com/1200x/34/31/c5/3431c5e19a2a91578064208f9d611486.jpg',
+  'https://i.pinimg.com/736x/f7/4e/71/f74e710ec2a23606ca1f058979438a19.jpg',
+  'https://i.pinimg.com/736x/70/30/3e/70303e818835dd079aa9ebd018d65b22.jpg',
+  'https://i.pinimg.com/736x/b2/33/42/b23342e2f4805deaf6aba6986b3603c6.jpg',
+  'https://i.pinimg.com/736x/58/09/e8/5809e8e0c28181dffd2b68527ace1609.jpg',
+  'https://i.pinimg.com/736x/69/8d/99/698d99ca1e2b367d426e445fa51d3824.jpg',
+  'https://i.pinimg.com/736x/25/1d/f9/251df94d92f984825f4ef217c289adb1.jpg',
 ]
 
 function entrar() {
   if (!nombre.value.trim()) {
-    error.value = 'El nombre es obligatorio'
+    error.value = "pon nombre"
     return
   }
   if (!avatarSeleccionado.value) {
-    error.value = 'Selecciona un avatar'
+    error.value = 'selecciona  un avatar'
     return
   }
   error.value = ''
@@ -58,7 +53,7 @@ function entrar() {
           <input
             v-model="nombre"
             type="text"
-            placeholder="Tu nombre..."
+            placeholder="pon tu nombre."
             @keyup.enter="entrar"
           />
         </div>

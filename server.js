@@ -30,7 +30,7 @@ io.on('connection', (socket) => {
       console.log('Se desconecto: ' + nombre)
       delete usuarios[socket.id]
       io.emit('usuarios', Object.values(usuarios))
-      // Mensaje de sistema: alguien se fue
+      //  alguien se fue
       io.emit('sistema', nombre + ' ha salido del chat')
     }
   })
@@ -41,13 +41,15 @@ io.on('connection', (socket) => {
     socket.nombreUsuario = nombre
     socket.estado = datos.estado || ''
     socket.imagen = datos.imagen || null
+    // guardamos tambien el socketId para poder enviar mensajes privados
     usuarios[socket.id] = {
+      socketId: socket.id,
       nombre: nombre,
       estado: socket.estado,
       imagen: socket.imagen
     }
     io.emit('usuarios', Object.values(usuarios))
-    // Mensaje de sistema: alguien llegó
+    // cuando nos conectamos
     socket.broadcast.emit('sistema', nombre + ' se ha unido al chat')
   })
 
@@ -61,6 +63,19 @@ io.on('connection', (socket) => {
     }
     mensajes.push(msg)
     io.emit('chat mensaje', msg)
+  })
+
+  // envia el mensaje solo al destinatario y al emisor
+  socket.on('mensaje privado', ({ texto, para }) => {
+    const msg = {
+      texto,
+      nombre: socket.nombreUsuario,
+      imagen: socket.imagen ,
+      timestamp: new Date().toISOString(),
+      privado: true
+    }
+    socket.to(para).emit('mensaje privado', { ...msg, de: socket.id })
+    socket.emit('mensaje privado', { ...msg, de: socket.id, para })
   })
 
   // Indicador de escritura
