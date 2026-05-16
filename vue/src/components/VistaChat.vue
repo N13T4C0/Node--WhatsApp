@@ -74,7 +74,6 @@ socket.on('mensaje privado', (msg) => {
   const clave = msg.de === undefined ? msg.para : msg.de
   if (!mensajesPrivados.value[clave]) mensajesPrivados.value[clave] = []
   mensajesPrivados.value[clave].push(msg)
-  scrollPrivado()
 })
 
 function enviar() {
@@ -113,17 +112,13 @@ function enviarPrivado() {
     para: usuarioPrivado.value.socketId
   })
   textoPrivado.value = ''
-  scrollPrivado()
 }
 
 function formatHora(iso) {
   return new Date(iso).toLocaleTimeString()
 }
 
-async function scrollPrivado() {
-  await nextTick()
-  if (privadoDiv.value) privadoDiv.value.scrollTop = privadoDiv.value.scrollHeight
-}
+
 </script>
 
 <template>
@@ -132,7 +127,7 @@ async function scrollPrivado() {
     <!-- PANEL IZQUIERDO -->
     <div class='panel-izq'>
       <div class='panel-header'>
-        <img :src='usuario.imagen' class='mi-avatar' />
+        <img :src='usuario.imagen' class='mi-avatar' referrerpolicy="no-referrer" />
         <div class='mi-info'>
           <span class='mi-nombre'>{{ usuario.nombre }}</span>
           <span class='mi-estado'>{{ usuario.estado }}</span>
@@ -150,7 +145,7 @@ async function scrollPrivado() {
           @click='abrirPrivado(u)'
         >
           <div class='avatar-wrap'>
-            <img :src='u.imagen' class='usuario-avatar' />
+            <img :src='u.imagen' class='usuario-avatar' referrerpolicy="no-referrer" />
             <span class='punto-verde'></span>
           </div>
           <div class='usuario-datos'>
@@ -181,7 +176,7 @@ async function scrollPrivado() {
             class='burbuja-wrap'
             :class="msg.nombre === usuario.nombre ? 'derecha' : 'izquierda'"
           >
-            <img v-if="msg.nombre !== usuario.nombre" :src='msg.imagen' class='burbuja-avatar' />
+            <img v-if="msg.nombre !== usuario.nombre" :src='msg.imagen' class='burbuja-avatar' referrerpolicy="no-referrer" />
             <div class='burbuja' :class="msg.nombre === usuario.nombre ? 'burbuja-mia' : 'burbuja-suya'">
               <span v-if="msg.nombre !== usuario.nombre" class='burbuja-autor'>{{ msg.nombre }}</span>
               <span class='burbuja-texto'>{{ msg.texto }}</span>
@@ -208,7 +203,7 @@ async function scrollPrivado() {
     <div v-if='usuarioPrivado' class='panel-privado'>
       <div class='chat-header privado-header'>
         <div class='chat-header-info'>
-          <img :src='usuarioPrivado.imagen' class='privado-avatar' />
+          <img :src='usuarioPrivado.imagen' class='privado-avatar' referrerpolicy="no-referrer" />
           <div>
             <span class='chat-titulo'>{{ usuarioPrivado.nombre }}</span>
             <span class='chat-subtitulo'>Mensaje privado</span>
@@ -224,7 +219,7 @@ async function scrollPrivado() {
             class='burbuja-wrap'
             :class="msg.nombre === usuario.nombre ? 'derecha' : 'izquierda'"
           >
-            <img v-if="msg.nombre !== usuario.nombre" :src='msg.imagen' class='burbuja-avatar' />
+            <img v-if="msg.nombre !== usuario.nombre" :src='msg.imagen' class='burbuja-avatar' referrerpolicy="no-referrer" />
             <div class='burbuja' :class="msg.nombre === usuario.nombre ? 'burbuja-mia' : 'burbuja-suya'">
               <span class='burbuja-texto'>{{ msg.texto }}</span>
               <span class='burbuja-hora'>{{ formatHora(msg.timestamp) }}</span>

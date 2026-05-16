@@ -1,12 +1,19 @@
 <script setup>
 import { ref } from 'vue'
+import { auth, googleProvider } from '../firebase.js'
+import { signInWithPopup, signOut } from 'firebase/auth'
 
 const emit = defineEmits(['login'])
+
+// modo: null = elegir, 'manual' = formulario, 'google' = google
+const modo = ref(null)
 
 const nombre = ref('')
 const estado = ref('')
 const avatarSeleccionado = ref(null)
 const error = ref('')
+const cargando = ref(false)
+const usuarioGoogle = ref(null)
 
 const avatares = [
   'https://i.pinimg.com/1200x/34/31/c5/3431c5e19a2a91578064208f9d611486.jpg',
@@ -18,22 +25,46 @@ const avatares = [
   'https://i.pinimg.com/736x/25/1d/f9/251df94d92f984825f4ef217c289adb1.jpg',
 ]
 
-function entrar() {
-  if (!nombre.value.trim()) {
-    error.value = "pon nombre"
-    return
+async function loginGoogle() {
+  cargando.value = true
+  error.value = ''
+  try {
+    const result = await signInWithPopup(auth, googleProvider)
+    const user = result.user
+    // imagen con tamaño mayor para evitar que salga pixelada
+    const foto = user.photoURL || 'https://i.pinimg.com/736x/25/1d/f9/251df94d92f984825f4ef217c289adb1.jpg'
+    emit('login', {
+      nombre: user.displayName || user.email,
+      estado: 'Disponible',
+      imagen: foto,
+      uid: user.uid,
+      email: user.email,
+    })
+  } catch (e) {
+    error.value = 'Error al iniciar sesión con Google'
+    cargando.value = false
   }
-  if (!avatarSeleccionado.value) {
-    error.value = 'selecciona  un avatar'
-    return
-  }
+}
+
+function cancelarGoogle() {
+  signOut(auth)
+  usuarioGoogle.value = null
+  nombre.value = ''
+  estado.value = ''
+  modo.value = null
+}
+
+function entrarManual() {
+  if (!nombre.value.trim()) { error.value = 'Pon un nombre'; return }
+  if (!avatarSeleccionado.value) { error.value = 'Selecciona un avatar'; return }
   error.value = ''
   emit('login', {
-    nombre: nombre.value,
+    nombre: nombre.value.trim(),
     estado: estado.value || 'en clase',
-    imagen: avatarSeleccionado.value
+    imagen: avatarSeleccionado.value,
   })
 }
+
 </script>
 
 <template>
@@ -48,46 +79,80 @@ function entrar() {
       <div class="login-body">
         <p class="subtitulo">Introduce tus datos para entrar al chat</p>
 
-        <div class="campo">
-          <label>Nombre</label>
-          <input
-            v-model="nombre"
-            type="text"
-            placeholder="pon tu nombre."
-            @keyup.enter="entrar"
-          />
+        <!-- PANTALLA INICIAL elegir método -->
+        <div v-if="modo == null" class="opciones">
+          <button class="btn-google" @click="loginGoogle" :disabled="cargando">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="google-icon" />
+            {{ cargando ? 'Conectando...' : 'Continuar con Google' }}
+          </button>
+
+          <div class="separador"><span>o</span></div>
+
+          <button class="btn-manual" @click="modo = 'manual'">
+            Entrar con nombre de usuario
+          </button>
         </div>
 
-        <div class="campo">
-          <label>Elige tu estado<span class="opcional"></span></label>
-          <input
-            v-model="estado"
-            type="text"
-            placeholder="Ej: En clase, Disponible..."
-            @keyup.enter="entrar"
-          />
-        </div>
-
-        <div class="campo">
-          <label>Elige tu avatar</label>
-          <div class="avatar-grid">
-            <img
-              v-for="(url, i) in avatares"
-              :key="i"
-              :src="url"
-              :class="{ seleccionado: avatarSeleccionado === url }"
-              @click="avatarSeleccionado = url"
-              alt="avatar"
-              class="avatar-opcion"
-            />
+        <!-- FORMULARIO MANUAL -->
+        <div v-else-if="modo == 'manual'">
+          <div class="campo">
+            <label>Nombre</label>
+            <input v-model="nombre" type="text" placeholder="Cómo te verán los demas" @keyup.enter="entrarManual" />
           </div>
+
+          <div class="campo">
+            <label>Estado</label>
+            <input v-model="estado" type="text" placeholder="Ej: En clase, Disponible..." @keyup.enter="entrarManual" />
+          </div>
+
+          <div class="campo">
+            <label>Elige tu avatar</label>
+            <div class="avatar-grid">
+              <img
+                v-for="(url, i) in avatares"
+                :key="i"
+                :src="url"
+                :class="{ seleccionado: avatarSeleccionado === url }"
+                @click="avatarSeleccionado = url"
+                alt="avatar"
+                class="avatar-opcion"
+              />
+            </div>
+          </div>
+
+          <p v-if="error" class="error">{{ error }}</p>
+
+          <button @click="entrarManual" class="btn-entrar">Entrar al chat</button>
+          <button @click="modo = null; nombre = ''; estado = ''; avatarSeleccionado = null; error = ''" class="btn-volver">← Volver</button>
         </div>
 
-        <p v-if="error" class="error">{{ error }}</p>
+        <!-- FORMULARIO GOOGLE -->
+        <div v-else-if="modo === 'google'">
+          <div class="google-user">
+            <img :src="usuarioGoogle.photoURL" class="google-foto" />
+            <div>
+              <span class="google-nombre">{{ usuarioGoogle.displayName }}</span>
+              <span class="google-email">{{ usuarioGoogle.email }}</span>
+            </div>
+          </div>
 
-        <button @click="entrar" class="btn-entrar">Entrar al chat</button>
+          <div class="campo">
+            <label>Nombre en el chat</label>
+            <input v-model="nombre" type="text" placeholder="Cómo te verán los demás" @keyup.enter="entrarGoogle" />
+          </div>
+
+          <div class="campo">
+            <label>Estado</label>
+            <input v-model="estado" type="text" placeholder="Ej: En clase, Disponible..." @keyup.enter="entrarGoogle" />
+          </div>
+
+          <p v-if="error" class="error">{{ error }}</p>
+
+          <button @click="entrarGoogle" class="btn-entrar">Entrar al chat</button>
+          <button @click="cancelarGoogle" class="btn-volver">← Volver</button>
+        </div>
+
       </div>
-
     </div>
   </div>
 </template>
@@ -141,9 +206,79 @@ function entrar() {
   margin-bottom: 20px;
 }
 
-.campo {
+.opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 11px 20px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  font-size: 15px;
+  font-weight: 500;
+  color: #3c4043;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  width: 100%;
+}
+
+.btn-google:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); border-color: #bbb; }
+.btn-google:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.google-icon { width: 20px; height: 20px; }
+
+.separador {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #aaa;
+  font-size: 13px;
+}
+.separador::before,
+.separador::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #eee;
+}
+
+.btn-manual {
+  width: 100%;
+  padding: 11px;
+  border: 1.5px solid #25d366;
+  border-radius: 8px;
+  background: white;
+  color: #25d366;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-manual:hover { background: #25d366; color: white; }
+
+.google-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #f0f9f4;
+  border: 1.5px solid #25d366;
+  border-radius: 8px;
   margin-bottom: 18px;
 }
+
+.google-foto { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+.google-nombre { display: block; font-size: 14px; font-weight: 600; color: #111; }
+.google-email { display: block; font-size: 12px; color: #667781; }
+
+.campo { margin-bottom: 18px; }
 
 .campo label {
   display: block;
@@ -151,11 +286,6 @@ function entrar() {
   font-weight: 600;
   color: #3b4a54;
   margin-bottom: 6px;
-}
-
-.opcional {
-  font-weight: 400;
-  color: #aaa;
 }
 
 .campo input {
@@ -166,11 +296,9 @@ function entrar() {
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s;
+  box-sizing: border-box;
 }
-
-.campo input:focus {
-  border-color: #25d366;
-}
+.campo input:focus { border-color: #25d366; }
 
 .avatar-grid {
   display: grid;
@@ -188,22 +316,10 @@ function entrar() {
   transition: border-color 0.2s, transform 0.1s;
   object-fit: cover;
 }
+.avatar-opcion:hover { border-color: #25d366; transform: scale(1.08); }
+.avatar-opcion.seleccionado { border-color: #25d366; box-shadow: 0 0 0 2px #25d36640; }
 
-.avatar-opcion:hover {
-  border-color: #25d366;
-  transform: scale(1.08);
-}
-
-.avatar-opcion.seleccionado {
-  border-color: #25d366;
-  box-shadow: 0 0 0 2px #25d36640;
-}
-
-.error {
-  color: #e53e3e;
-  font-size: 13px;
-  margin-bottom: 12px;
-}
+.error { color: #e53e3e; font-size: 13px; margin-bottom: 12px; }
 
 .btn-entrar {
   width: 100%;
@@ -216,9 +332,18 @@ function entrar() {
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
+  margin-bottom: 8px;
 }
+.btn-entrar:hover { background: #1da851; }
 
-.btn-entrar:hover {
-  background: #1da851;
+.btn-volver {
+  width: 100%;
+  padding: 10px;
+  background: none;
+  border: none;
+  color: #667781;
+  font-size: 14px;
+  cursor: pointer;
 }
+.btn-volver:hover { color: #333; }
 </style>
