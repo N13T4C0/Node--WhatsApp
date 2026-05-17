@@ -74,7 +74,9 @@ io.on('connection', (socket) => {
       timestamp: new Date().toISOString(),
       privado: true
     }
+    // manda el mensaje solo al destinatario sin para para que sepa que lo recibiio
     socket.to(para).emit('mensaje privado', { ...msg, de: socket.id })
+    // devuelve el mensaje al remitente (con 'para', para saber a quién se lo mando
     socket.emit('mensaje privado', { ...msg, de: socket.id, para })
   })
 
