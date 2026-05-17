@@ -71,7 +71,12 @@ socket.on('parado de escribir', () => {
 
 // recibimos un mensaje privado y lo guardamos bajo el socketId del otro
 socket.on('mensaje privado', (msg) => {
-  const clave = msg.de === undefined ? msg.para : msg.de
+  let clave
+  if (msg.para == null) {
+    clave = msg.de   // me lo enviaron a mí
+  } else {
+    clave = msg.para // yo lo envié
+  }
   if (!mensajesPrivados.value[clave]) mensajesPrivados.value[clave] = []
   mensajesPrivados.value[clave].push(msg)
 })
@@ -95,9 +100,8 @@ function onEscribiendo() {
 
 // abrimos el panel privado con el usuario clickado
 function abrirPrivado(u) {
-  if (u.nombre === props.usuario.nombre) return
+  if (u.nombre == props.usuario.nombre) return
   usuarioPrivado.value = u
-  if (!mensajesPrivados.value[u.socketId]) mensajesPrivados.value[u.socketId] = []
 }
 
 function cerrarPrivado() {
