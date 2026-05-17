@@ -2,7 +2,7 @@
 
 Chat en tiempo real inspirado en WhatsApp, construido con Node.js, Socket.io y Vue 3.
 
-![Preview](./preview.png)
+<img src="https://i.postimg.cc/FRc1H9Q6/Captura-de-pantalla-2026-05-17-164947.png">
 
 ## Características
 
