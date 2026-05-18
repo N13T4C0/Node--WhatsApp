@@ -253,19 +253,16 @@ function formatHora(iso) {
   </div>
 
   <!-- noti de mensaje privado -->
-  <div v-if='mensajeNuevo'>
-    <div>
-      <div>
-        <img :src='mensajeNuevo.imagen' />
-        <div >
-          <span>{{ mensajeNuevo.nombre }}</span>
-          <span >Nueva noti privada</span>
-        </div>
-        <button @click='mensajeNuevo = null'>✕</button>
+  <div v-if='mensajeNuevo' class='noti-privada'>
+    <div class='noti-header'>
+      <img :src='mensajeNuevo.imagen' class='noti-avatar' referrerpolicy="no-referrer" />
+      <div class='noti-info'>
+        <span class='noti-nombre'>{{ mensajeNuevo.nombre }}</span>
+        <span class='noti-label'>Mensaje privado</span>
       </div>
-      <p >{{ mensajeNuevo.texto }}</p>
-     
+      <button class='noti-cerrar' @click='mensajeNuevo = null'>✕</button>
     </div>
+    <p class='noti-texto'>{{ mensajeNuevo.texto }}</p>
   </div>
 
 </template>
@@ -540,4 +537,88 @@ function formatHora(iso) {
 .panel-privado .burbuja-mia { background: #0f1a0f; border: 1px solid #00fff7; border-bottom-right-radius: 2px; box-shadow: 0 0 8px rgba(0,255,247,0.15); }
 .panel-privado .burbuja-mia .burbuja-texto { color: #00fff7; font-family: monospace; }
 .panel-privado .burbuja-mia .burbuja-hora { color: #00888a; }
+
+/* notificacion mensaje privado */
+.noti-privada {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 280px;
+  background: #0a0a0f;
+  border: 1px solid #00fff7;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0, 255, 247, 0.25), 0 4px 16px rgba(0, 0, 0, 0.6);
+  padding: 12px 14px;
+  z-index: 9999;
+  animation: noti-slide-in 0.25s ease-out;
+}
+
+@keyframes noti-slide-in {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.noti-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.noti-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #00fff7;
+  box-shadow: 0 0 6px rgba(0, 255, 247, 0.4);
+  flex-shrink: 0;
+}
+
+.noti-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.noti-nombre {
+  font-size: 13px;
+  font-weight: 600;
+  color: #00fff7;
+  text-shadow: 0 0 6px #00fff7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.noti-label {
+  font-size: 10px;
+  color: #ff00c8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.noti-cerrar {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.noti-cerrar:hover { color: #ff00c8; }
+
+.noti-texto {
+  margin: 0;
+  font-size: 13px;
+  color: #a0f0ec;
+  font-family: monospace;
+  word-break: break-word;
+  border-left: 2px solid #00fff7;
+  padding-left: 8px;
+}
 </style>
