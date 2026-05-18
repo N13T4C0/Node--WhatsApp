@@ -7,9 +7,7 @@ const props = defineProps({
 })
 
 // En dev conecta directo al backend; en prod usa la ruta relativa
-const socket = import.meta.env.DEV
-  ? io('http://localhost:3000')
-  : io({ path: '/socket.io' })
+const socket = import.meta.env.DEV ? io('http://localhost:3000') : io({ path: '/socket.io' })
 
 const mensajes = ref([])
 const usuarios = ref([])
@@ -23,6 +21,8 @@ const usuarioPrivado = ref(null)
 // mensajes privados guardados por socketId del otro usuario
 const mensajesPrivados = ref({})
 const textoPrivado = ref('')
+// para la notificacion
+const mensajeNuevo = ref(null)
 
 let timerEscribiendo = null
 
@@ -72,13 +72,20 @@ socket.on('parado de escribir', () => {
 // recibimos un mensaje privado y lo guardamos bajo el socketId del otro
 socket.on('mensaje privado', (msg) => {
   let clave
-  if (msg.para == null) {
+  if (msg.esReceptor) {
     clave = msg.de   // me lo enviaron a mí
   } else {
     clave = msg.para // yo lo envié
   }
   if (!mensajesPrivados.value[clave]) mensajesPrivados.value[clave] = []
   mensajesPrivados.value[clave].push(msg)
+
+
+
+  // mostrar noti solo si me lo enviaron ami y no tengo ese chat abierto
+  if (msg.esReceptor && (!usuarioPrivado.value || usuarioPrivado.value.socketId != msg.de)) {
+    mensajeNuevo.value = msg
+  }
 })
 
 function enviar() {
@@ -244,6 +251,23 @@ function formatHora(iso) {
     </div>
 
   </div>
+
+  <!-- noti de mensaje privado -->
+  <div v-if='mensajeNuevo'>
+    <div>
+      <div>
+        <img :src='mensajeNuevo.imagen' />
+        <div >
+          <span>{{ mensajeNuevo.nombre }}</span>
+          <span >Nueva noti privada</span>
+        </div>
+        <button @click='mensajeNuevo = null'>✕</button>
+      </div>
+      <p >{{ mensajeNuevo.texto }}</p>
+     
+    </div>
+  </div>
+
 </template>
 
 <style scoped>

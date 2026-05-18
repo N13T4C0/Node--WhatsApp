@@ -5,7 +5,7 @@ import { signInWithPopup, signOut } from 'firebase/auth'
 
 const emit = defineEmits(['login'])
 
-// modo: null = elegir, 'manual' = formulario, 'google' = google
+// modo: null = elegir, manual = formulario, 'google' = google
 const modo = ref(null)
 
 const nombre = ref('')

@@ -7,12 +7,16 @@ const port = process.env.PORT || 3000
 const { Server } = require('socket.io')
 const { createServer } = require('node:http')
 
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? ['https://node-whatsapp-fn9f.onrender.com']
+  : ['http://localhost:5173', 'http://localhost:3000']
+
 const app = express()
-app.use(cors({ origin: '*' }))
+app.use(cors({ origin: allowedOrigins }))
 
 const server = createServer(app)
 const io = new Server(server, {
-  cors: { origin: '*' }
+  cors: { origin: allowedOrigins }
 })
 
 var mensajes = []
@@ -49,7 +53,8 @@ io.on('connection', (socket) => {
       imagen: socket.imagen
     }
     io.emit('usuarios', Object.values(usuarios))
-    // cuando nos conectamos
+    // cuando nos conectamos 
+
     socket.broadcast.emit('sistema', nombre + ' se ha unido al chat')
   })
 
@@ -75,7 +80,7 @@ io.on('connection', (socket) => {
       privado: true
     }
     // manda el mensaje solo al destinatario sin para para que sepa que lo recibiio
-    socket.to(para).emit('mensaje privado', { ...msg, de: socket.id })
+    socket.to(para).emit('mensaje privado', { ...msg, de: socket.id, esReceptor: true })
     // devuelve el mensaje al remitente (con 'para', para saber a quién se lo mando
     socket.emit('mensaje privado', { ...msg, de: socket.id, para })
   })
